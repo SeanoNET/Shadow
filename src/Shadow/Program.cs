@@ -9,25 +9,28 @@ namespace Shadow
 {
     class Program
     {
+        static string logfile = "/home/seano/source/Shadow/log.txt";
+        static string logLocation = "/home/seano/source/Shadow";
+
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+          
 
-            using var watcher = new FileSystemWatcher(@"C:\Users\seanp\source\repos\Shadow");
+            using var watcher = new FileSystemWatcher(logLocation);
             watcher.Changed += OnChanged;
-            watcher.Filter = "default.log";
+            watcher.Filter = "log.txt";
             watcher.IncludeSubdirectories = true;
             watcher.EnableRaisingEvents = true;
 
             //Read file at the start
-            var fs = new FileStream(@"C:\Users\seanp\source\repos\Shadow\default.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);          
+            var fs = new FileStream(logfile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);          
             using (fs)
             {
                 var b = new byte[1024];
                 UTF8Encoding temp = new UTF8Encoding(true);
                 while (fs.Read(b, 0, b.Length) > 0)
                 {
-                    Console.WriteLine(temp.GetString(b));
+                    //Console.WriteLine(temp.GetString(b));
                 }
                 totalReadBytes = fs.Length;
             }
@@ -35,6 +38,7 @@ namespace Shadow
             Console.ReadLine();         
         }
         static long totalReadBytes = 0;
+        static long maxBufferLength = 1024;
         private static void OnChanged(object sender, FileSystemEventArgs e)
         {
             if (e.ChangeType != WatcherChangeTypes.Changed)
@@ -42,23 +46,38 @@ namespace Shadow
                 return;
             }
 
-            var fs = new FileStream(@"C:\Users\seanp\source\repos\Shadow\default.log", FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            var fs = new FileStream(logfile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
             string content = string.Empty;
             using (fs)
             {
+                //totalReadBytes = fs.Length - 100;
                 var b = new byte[1024];
                 UTF8Encoding temp = new UTF8Encoding(true);
                 fs.Position = totalReadBytes;
+                //fs.Seek(totalReadBytes, SeekOrigin.End);
                 while (fs.Read(b, 0, b.Length) > 0)
                 {
                     content = temp.GetString(b);
                 }
                 totalReadBytes = fs.Length;
             }
-            Console.WriteLine(content);
+            PrintLog(content);
             Console.WriteLine($"Has NewLine: {content.Contains(Environment.NewLine)}");
             Console.WriteLine($"Changed: {e.FullPath}");
-            Console.WriteLine($"Buffer Size: {totalReadBytes.ToString()}");
+            Console.WriteLine($"File Size: {totalReadBytes.ToString()}");
+        }
+
+        private static void PrintLog(string content)
+        {
+            //If the string in content contains INF print with green color
+            if (content.Contains("INF"))
+            {
+                var existingColour = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine(content);
+                Console.ForegroundColor = existingColour;
+            }
+           
         }
     }
 }
