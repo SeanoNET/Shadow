@@ -15,7 +15,8 @@ namespace Shadow
         static void Main(string[] args)
         {
           
-
+            var fileShadow = new FileShadow("log.txt", logLocation + "/");
+              Console.ReadLine();      
             using var watcher = new FileSystemWatcher(logLocation);
             watcher.Changed += OnChanged;
             watcher.Filter = "log.txt";
